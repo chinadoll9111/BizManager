@@ -1,15 +1,23 @@
 {
+  "id": "com.bizmanager.app",
   "short_name": "BizManager",
   "name": "Business Management App",
   "icons": [
     {
       "src": "https://flaticon.com",
+      "sizes": "128x128",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://flaticon.com",
       "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
   "start_url": "./index.html",
+  "scope": "./",
   "background_color": "#212529",
   "theme_color": "#0d6efd",
   "display": "standalone",

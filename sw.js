@@ -1,11 +1,10 @@
-const CACHE_NAME = 'bizmanager-cache-v1';
+const CACHE_NAME = 'bizmanager-v2';
 const ASSETS = [
   './index.html',
   './app.js',
   './manifest.json'
 ];
 
-// Install Assets Locally on the Phone
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -14,7 +13,6 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activate and Clear Old Caches
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -27,8 +25,17 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch files from local phone cache instead of network internet
 self.addEventListener('fetch', (e) => {
+  // Fixes a common Chrome bug with tracking query parameters
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => {
+        return caches.match('./index.html');
+      })
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       return cachedResponse || fetch(e.request);
