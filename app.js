@@ -93,7 +93,7 @@ function addPurchaseRow(itemName = '', qty = 1, price = 0) {
         <td><input type="number" class="form-control p-qty" value="${qty}" min="1" oninput="updatePurchaseRowTotal(this)"></td>
         <td><input type="number" class="form-control p-price" value="${price}" min="0" step="0.01" oninput="updatePurchaseRowTotal(this)"></td>
         <td><input type="number" class="form-control p-total" value="${(qty * price).toFixed(2)}" readonly></td>
-        <td><button class="btn btn-sm btn-danger" style="width:100%;" onclick="removeRow(this)">Remove</button></td>
+        <td><button class="btn btn-sm btn-danger" style="width:100%;" onclick="removeRow(this)">X</button></td>
     `;
     tbody.appendChild(tr);
 }
@@ -246,7 +246,7 @@ function addSalesRow(itemName = '', qty = 1, price = 0) {
         <td><input type="number" class="form-control item-qty" value="${qty}" min="1" oninput="updateRowTotal(this)"></td>
         <td><input type="number" class="form-control item-price" value="${price}" min="0" step="0.01" oninput="updateRowTotal(this)"></td>
         <td><input type="number" class="form-control item-total" value="${(qty * price).toFixed(2)}" readonly></td>
-        <td><button class="btn btn-sm btn-danger" style="width:100%;" onclick="removeRow(this)">Remove</button></td>
+        <td><button class="btn btn-sm btn-danger" style="width:100%;" onclick="removeRow(this)">X</button></td>
     `;
     tbody.appendChild(tr);
     calculateGrandTotals();
