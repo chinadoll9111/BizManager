@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <title>Business Management App</title>
+    <!-- Lightweight embedded framework to guarantee 100% offline mobile responsiveness -->
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background-color: #f8f9fa; color: #212529; }
+        
+        /* Strict Side-by-Side Responsive Layout Flex-Grid Rules */
+        .app-container { display: flex; flex-direction: row; min-height: 100vh; width: 100%; }
+        .sidebar { background: #212529; color: white; padding: 20px; width: 240px; flex-shrink: 0; }
+        .sidebar h4 { text-align: center; margin-bottom: 25px; margin-top: 10px; font-size: 1.4rem; }
+        .nav-btn { display: block; width: 100%; padding: 12px; margin-bottom: 12px; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; text-align: left; cursor: pointer; font-size: 1rem; }
+        .nav-btn.active, .nav-btn:hover { background: #0d6efd; border-color: #0d6efd; }
+        .main-content { flex: 1; padding: 20px; width: 100%; overflow-x: hidden; }
+        
+        /* Mobile Viewport Adaptation Rules */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; padding: 15px; }
+            .main-content { padding: 15px; }
+            .row-split { flex-direction: column !important; }
+            .col-split { width: 100% !important; max-width: 100% !important; }
+        }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; }
+        .card { background: white; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 25px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+        .card-header { padding: 14px 20px; background: #0d6efd; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 20px; }
+        
+        /* Elements Core */
+        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-sm { padding: 5px 10px; font-size: 0.85rem; border-radius: 4px; }
+        .btn-light { background: white; color: #212529; }
+        .btn-primary { background: #0d6efd; color: white; }
+        .btn-success { background: #198754; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem; background-color: #fff; color: #212529; }
+        
+        /* Table Layout Boundaries */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; margin-top: 10px; border-radius: 6px; border: 1px solid #dee2e6; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; table-layout: fixed; }
+        th, td { padding: 14px; border-bottom: 1px solid #dee2e6; text-align: left; overflow: hidden; }
+        th { background: #f8f9fa; font-weight: 600; color: #495057; }
+        
+       /* Column Width Enforcements: Maximum Length for Names, Compact Layout for Numbers */
+       #sales-rows td:nth-child(1), #purchase-rows td:nth-child(1) { width: 50%; } /* Item Name gets half the table length */
+       #sales-rows td:nth-child(2), #purchase-rows td:nth-child(2) { width: 10%; } /* Quantity becomes nice and small */
+       #sales-rows td:nth-child(3), #purchase-rows td:nth-child(3) { width: 15%; } /* Unit Price */
+       #sales-rows td:nth-child(4), #purchase-rows td:nth-child(4) { width: 15%; } /* Total Price */
+       #sales-rows td:nth-child(5), #purchase-rows td:nth-child(5) { width: 10%; } /* Remove button shrinks down tightly */
+
+       #expense-rows td:nth-child(1) { width: 75%; } /* Expense Description gets maximum room */
+       #expense-rows td:nth-child(2) { width: 17%; } /* Expense Amount stays clean */
+       #expense-rows td:nth-child(3) { width: 8%; }  /* Expense Delete button becomes very small */
+
+       /* Form inputs styling tweak to fill their custom locked boxes perfectly */
+       .form-control {
+           width: 100% !important;
+        }
+
+
+        /* Grid Framework Columns split rules */
+        .row-split { display: flex; gap: 20px; width: 100%; }
+        .col-split { flex: 1; min-width: 0; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.15rem; }
+        .fw-bold { font-weight: bold; }
+        .text-primary { color: #0d6efd; }
+        .text-danger { color: #dc3545; }
+        .text-success { color: #198754; }
+        .d-none { display: none !important; }
+        hr { border: 0; border-top: 1px solid #dee2e6; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<!-- Dynamic Native Shared Datalist Dropdown Cache Reference Layer -->
+<datalist id="inventory-suggestions"></datalist>
+
+<div class="app-container">
+    <!-- Fixed Sidebar Navigation Container Block -->
+    <nav class="sidebar">
+        <h4>BizManager</h4>
+        <button class="nav-btn active" id="nav-logs" onclick="switchPage('logs')">📅 Daily Logs</button>
+        <button class="nav-btn" id="nav-purchases" onclick="switchPage('purchases')">🛒 Market Purchases</button>
+        <button class="nav-btn" id="nav-inventory" onclick="switchPage('inventory')">📦 Inventory Stock</button>
+    </nav>
+
+    <!-- Main Dynamic Content Canvas Platform -->
+    <main class="main-content">
+        
+        <!-- ========================================== -->
+        <!-- SCREEN 1: DAILY LOGS VIEW                  -->
+        <!-- ========================================== -->
+        <div id="page-logs">
+            <div class="header-row">
+                <h2 style="margin:0;">Daily Sales & Expenses</h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="fw-bold">Date:</label>
+                    <input type="date" id="log-date" class="form-control" style="width: auto;" onchange="loadDailyData()">
+                </div>
+            </div>
+
+            <!-- Sales Log Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="margin:0;">Product Sales Log Table</h5>
+                    <button class="btn btn-sm btn-light" onclick="addSalesRow()">+ Add Row</button>
+                </div>
+                <div class="card-body" style="padding: 10px;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">Item Name (Searchable Stock)</th>
+                                    <th style="width: 10%;">Qty</th>
+                                    <th style="width: 15%;">Unit Price</th>
+                                    <th style="width: 15%;">Total Price</th>
+                                    <th style="width: 10%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-rows"></tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Calculations Panel Split Rows -->
+            <div class="row-split">
+                <div class="col-split">
+                    <div class="card">
+                        <div class="card-header" style="background:#dc3545;">
+                            <h5 style="margin:0;">Daily Expenses List</h5>
+                            <button class="btn btn-sm btn-light fw-bold" onclick="addExpenseRow()">+ Add Expense</button>
+                        </div>
+                        <div class="card-body" style="padding: 10px;">
+                            <div class="table-responsive">
+                                <table>
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 60%;">Description</th>
+                                            <th style="width: 25%;">Amount</th>
+                                            <th style="width: 15%;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expense-rows"></tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-split">
+                    <div class="card">
+                        <div class="card-header" style="background:#198754;"><h5>Day Net Calculations</h5></div>
+                        <div class="card-body">
+                            <div class="summary-item">
+                                <span>Gross Sales:</span> <span id="total-sales-display" class="fw-bold text-primary">0.00</span>
+                            </div>
+                            <div class="summary-item">
+                                <span>Total Expenses:</span> <span id="total-expenses-display" class="fw-bold text-danger">0.00</span>
+                            </div>
+                            <hr>
+                            <div class="summary-item fw-bold" style="font-size: 1.4rem; margin-bottom: 0;">
+                                <span>Net Profit:</span> <span id="net-profit-display" class="text-success">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-success" style="padding: 12px 35px; font-size: 1.1rem; width: 100%; max-width: 250px;" onclick="saveCurrentDay()">💾 Save Day Logs</button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: BULK MARKET PURCHASES LOGS       -->
+        <!-- ========================================== -->
+        <div id="page-purchases" class="d-none">
+            <div class="header-row">
+                <h2 style="margin:0;">Bulk Market Purchases</h2>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label class="fw-bold">Purchase Date:</label>
+                    <input type="date" id="purchase-date" class="form-control" style="width: auto;" onchange="loadPurchaseData()">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="background:#212529;">
+                    <h5 style="margin:0;">Items Bought From Market</h5>
+                    <button class="btn btn-sm btn-light" onclick="addPurchaseRow()">+ Add Purchase Row</button>
+                </div>
+                <div class="card-body" style="padding: 10px;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">Item Name</th>
+                                    <th style="width: 10%;">Qty</th>
+                                    <th style="width: 15%;">Cost Price (Per Item)</th>
+                                    <th style="width: 15%;">Total Outlay Amount</th>
+                                    <th style="width: 10%;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchase-rows"></tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-primary" style="padding: 12px 35px; font-size: 1.1rem; width: 100%; max-width: 250px;" onclick="saveCurrentPurchaseDay()">💾 Save Market Trip</button>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 3: INVENTORY WAREHOUSE MANAGEMENT   -->
+        <!-- ========================================== -->
+        <div id="page-inventory" class="d-none">
+            <h2 style="margin-bottom: 20px;">📦 Inventory Warehouse Balances</h2>
+            <div class="card">
+                <div class="card-header" style="background:#6c757d;">
+                    <h5 style="margin:0;">Counter Stock Balances</h5>
+                </div>
+                <div class="card-body" style="padding: 10px;">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Stock Balance</th>
+                                    <th style="width: 120px; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-rows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log("Offline Engine Activated!"))
+      .catch((err) => console.log("Engine failed:", err));
+  }
+</script>
+
+<script src="app.js"></script>
+</body>
+</html>
+
