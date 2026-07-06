@@ -427,3 +427,45 @@ function calculateGrandTotals() {
     document.getElementById('total-expenses-display').innerText = totalExpenses.toFixed(2);
     document.getElementById('net-profit-display').innerText = netProfit.toFixed(2);
 }
+// ==========================================
+// PART 5: NATIVE XIAOMI / HYPEROS INSTALL OVERRIDE
+// ==========================================
+
+let deferredPrompt;
+const installBtn = document.getElementById('xiaomi-install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent standard Chrome rules from failing silently
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Reveal the hidden native install container button immediately on screen
+    if (installBtn) {
+        installBtn.classList.remove('d-none');
+    }
+});
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        
+        // Show the native system install dialogue prompt box
+        deferredPrompt.prompt();
+        
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User installation choice outcome: ${outcome}`);
+        
+        // Clean up the memory and hide button if successfully accepted
+        deferredPrompt = null;
+        installBtn.classList.add('d-none');
+    });
+}
+
+// Hide the button automatically once the app running standalone context parameters
+window.addEventListener('appinstalled', () => {
+    if (installBtn) {
+        installBtn.classList.add('d-none');
+    }
+    deferredPrompt = null;
+    alert("BizManager installed to home screen successfully!");
+});
